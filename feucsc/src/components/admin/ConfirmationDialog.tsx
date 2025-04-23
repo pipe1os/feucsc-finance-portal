@@ -29,10 +29,12 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       onClose={onClose}
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
-      PaperProps={{
-        sx: {
-          backgroundColor: "#2a2a2a",
-          color: "white",
+      slotProps={{
+        paper: {
+          sx: {
+            backgroundColor: "#2a2a2a",
+            color: "white",
+          },
         },
       }}
     >

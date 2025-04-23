@@ -188,13 +188,18 @@ const AdminPanel: React.FC = () => {
         dayToUse,
       );
       if (isNaN(dateObj.getTime())) {
-        throw new Error("Fecha inválida seleccionada.");
+        setSnackbar({
+          open: true,
+          message: "Fecha inválida seleccionada.",
+          severity: "error",
+        });
+        return;
       }
       transactionDate = FirebaseTimestamp.fromDate(dateObj);
-    } catch (dateError: any) {
+    } catch (dateError: unknown) {
       setSnackbar({
         open: true,
-        message: dateError.message || "Error al construir la fecha.",
+        message: dateError instanceof Error ? dateError.message : "Error al construir la fecha.",
         severity: "error",
       });
       return;
@@ -235,11 +240,11 @@ const AdminPanel: React.FC = () => {
         'input[type="file"]',
       ) as HTMLInputElement;
       if (fileInput) fileInput.value = "";
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error en handleSubmit:", error);
       setSnackbar({
         open: true,
-        message: error.message || "Error al agregar el movimiento.",
+        message: error instanceof Error ? error.message : "Error al agregar el movimiento.",
         severity: "error",
       });
     } finally {
@@ -330,7 +335,7 @@ const AdminPanel: React.FC = () => {
       }
     };
 
-    loadAndSubscribe();
+    void loadAndSubscribe();
 
     return () => {
       if (unsubscribe) {
@@ -356,8 +361,8 @@ const AdminPanel: React.FC = () => {
       const col = sortConfig.column;
       if (!col) return 0;
 
-      let valA: any;
-      let valB: any;
+      let valA: unknown;
+      let valB: unknown;
 
       if (col === "date") {
         valA = a.date?.toMillis() ?? 0;
@@ -374,8 +379,15 @@ const AdminPanel: React.FC = () => {
       }
 
       let comparison = 0;
-      if (valA > valB) comparison = 1;
-      else if (valA < valB) comparison = -1;
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        if (valA > valB) comparison = 1;
+        else if (valA < valB) comparison = -1;
+      } else {
+        const strA = String(valA);
+        const strB = String(valB);
+        if (strA > strB) comparison = 1;
+        else if (strA < strB) comparison = -1;
+      }
 
       return sortConfig.direction === "desc" ? comparison * -1 : comparison;
     });
@@ -485,7 +497,7 @@ const AdminPanel: React.FC = () => {
     const originalReceiptUrl = originalTransaction?.receiptUrl;
 
     try {
-      let finalUpdateData = { ...updatedData };
+      const finalUpdateData = { ...updatedData };
       let newReceiptUrl: string | null = null;
 
       if (newFile) {
@@ -552,7 +564,7 @@ const AdminPanel: React.FC = () => {
               originalReceiptUrl,
             );
           }
-        } catch (deleteError: any) {
+        } catch (deleteError: unknown) {
           console.error(
             `Error al borrar archivo antiguo (${originalReceiptUrl}):`,
             deleteError,
@@ -566,11 +578,11 @@ const AdminPanel: React.FC = () => {
         message: "Movimiento actualizado con éxito",
         severity: "success",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error guardando cambios para ID", id, error);
       setSnackbar({
         open: true,
-        message: `Error al guardar: ${error.message || "Ocurrió un problema"}`,
+        message: `Error al guardar: ${error instanceof Error ? error.message : "Ocurrió un problema"}`,
         severity: "error",
       });
       throw error;
@@ -882,13 +894,16 @@ const AdminPanel: React.FC = () => {
                   helperText={amountError || ""}
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Typography sx={{ color: "grey.500" }}>$</Typography>
-                      </InputAdornment>
-                    ),
-                    inputProps: { min: 0, placeholder: "Ej: 50000" },
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Typography sx={{ color: "grey.500" }}>$</Typography>
+                        </InputAdornment>
+                      )
+                    },
+                    inputLabel: { shrink: true },
+                    htmlInput: { min: 0, placeholder: "Ej: 50000" }
                   }}
                   sx={inputStyles}
                   size="small"

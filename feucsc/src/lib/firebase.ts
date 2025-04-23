@@ -1,6 +1,9 @@
-// src/lib/firebase.ts
+
 import { initializeApp, type FirebaseApp } from "firebase/app";
-// No importar getFirestore, getStorage, getAuth aquí estáticamente
+import type { Firestore } from "firebase/firestore";
+import type { FirebaseStorage } from "firebase/storage";
+import type { Auth } from "firebase/auth";
+
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -11,10 +14,10 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Variable para guardar la instancia de app inicializada
+
 let app: FirebaseApp | null = null;
 
-// Función para inicializar (si no existe) y devolver la app
+
 const initializeFirebaseApp = (): FirebaseApp => {
   if (!app) {
     app = initializeApp(firebaseConfig);
@@ -22,13 +25,7 @@ const initializeFirebaseApp = (): FirebaseApp => {
   return app;
 };
 
-// Exportar la función para obtener la app (puede ser útil)
-export const getFirebaseApp = (): FirebaseApp => initializeFirebaseApp();
-
-// --- Exportar funciones getter asíncronas para los servicios ---
-
-// Variable para cachear la instancia de Firestore
-let dbInstance: any | null = null; // Usar 'any' temporalmente o importar el tipo Firestore dinámicamente si es necesario
+let dbInstance: Firestore | null = null;
 export const getDb = async () => {
   if (!dbInstance) {
     const { getFirestore } = await import("firebase/firestore");
@@ -37,8 +34,8 @@ export const getDb = async () => {
   return dbInstance;
 };
 
-// Variable para cachear la instancia de Storage
-let storageInstance: any | null = null;
+
+let storageInstance: FirebaseStorage | null = null;
 export const getStorageInstance = async () => {
   if (!storageInstance) {
     const { getStorage } = await import("firebase/storage");
@@ -47,8 +44,8 @@ export const getStorageInstance = async () => {
   return storageInstance;
 };
 
-// Variable para cachear la instancia de Auth
-let authInstance: any | null = null;
+
+let authInstance: Auth | null = null;
 export const getAuthInstance = async () => {
   if (!authInstance) {
     const { getAuth } = await import("firebase/auth");
@@ -56,9 +53,3 @@ export const getAuthInstance = async () => {
   }
   return authInstance;
 };
-
-// Ya no necesitamos exportar las instancias directamente ni la app como default
-// export default app;
-// export const db = getFirestore(app);
-// export const storage = getStorage(app);
-// export const auth = getAuth(app);

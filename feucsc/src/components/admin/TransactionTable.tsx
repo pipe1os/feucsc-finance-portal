@@ -14,7 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
-import { Transaction } from "../../lib/transactions";
+import { Transaction } from "@/lib/transactions.ts";
 
 type Order = "asc" | "desc";
 
@@ -25,7 +25,7 @@ export interface ColumnConfig {
   sortable?: boolean;
   minWidth?: number;
   align?: "right" | "left" | "center";
-  format?: (value: any, row: Transaction) => React.ReactNode;
+  format?: (value: never, row: Transaction) => React.ReactNode;
 }
 
 interface TransactionTableProps {

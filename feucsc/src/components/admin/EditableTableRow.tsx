@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   TableRow,
@@ -20,9 +21,9 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { type Timestamp } from "firebase/firestore";
-import { Transaction } from "../../lib/transactions";
-import { formatTransactionDate } from "../../lib/utils";
+import { Timestamp } from "firebase/firestore";
+import { Transaction } from "@/lib/transactions.ts";
+import { formatTransactionDate } from "@/lib/utils.ts";
 
 interface EditableTransactionData extends Partial<Transaction> {
   _year?: string;
@@ -74,13 +75,13 @@ const editInputStyles = {
 };
 
 const EditableTableRow: React.FC<EditableTableRowProps> = ({
-  transaction,
-  isEditing,
-  onSave,
-  onCancel,
-  onDelete,
-  onEdit,
-}) => {
+                                                             transaction,
+                                                             isEditing,
+                                                             onSave,
+                                                             onCancel,
+                                                             onDelete,
+                                                             onEdit,
+                                                           }) => {
   const [editData, setEditData] = useState<EditableTransactionData>({});
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editFileName, setEditFileName] = useState<string>(
@@ -112,7 +113,7 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
 
   const handleInputChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
+  ): void => {
     const { name, value, type } = event.target;
     setEditData((prev) => ({
       ...prev,
@@ -121,14 +122,14 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
   };
 
   const handleSelectChange = (
-    event: SelectChangeEvent<string>,
+    event: SelectChangeEvent,
     name: "_year" | "_month" | "_day",
-  ) => {
+  ): void => {
     const { value } = event.target;
     setEditData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, checked } = event.target;
     setEditData((prev) => ({
       ...prev,
@@ -139,7 +140,7 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
     }));
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     if (event.target.files && event.target.files[0]) {
       setEditFile(event.target.files[0]);
       setEditFileName(event.target.files[0].name);
@@ -149,7 +150,7 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
     }
   };
 
-  const handleInternalSave = async () => {
+  const handleInternalSave = async (): Promise<void> => {
     setIsSaving(true);
     const year = parseInt(editData._year || "0", 10);
     const month = parseInt(editData._month || "0", 10) - 1;
@@ -157,17 +158,26 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
 
     let newTimestamp: Timestamp | null = null;
     if (year > 0 && month >= 0 && day > 0) {
-      const { Timestamp: FirebaseTimestamp } = await import(
-        "firebase/firestore"
-      );
-      const date = new Date(Date.UTC(year, month, day));
-      if (
-        !isNaN(date.getTime()) &&
-        date.getUTCFullYear() === year &&
-        date.getUTCMonth() === month &&
-        date.getUTCDate() === day
-      ) {
-        newTimestamp = FirebaseTimestamp.fromDate(date);
+      try {
+        const { Timestamp: FirebaseTimestamp } = await import(
+          "firebase/firestore"
+          );
+        const date = new Date(Date.UTC(year, month, day));
+        if (
+          !Number.isNaN(date.getTime()) &&
+          date.getUTCFullYear() === year &&
+          date.getUTCMonth() === month &&
+          date.getUTCDate() === day
+        ) {
+          newTimestamp = FirebaseTimestamp.fromDate(date);
+        }
+      } catch (importError) {
+        console.error("Error importing Firebase Timestamp:", importError);
+        alert(
+          "Error al procesar la fecha. Inténtelo de nuevo.",
+        );
+        setIsSaving(false);
+        return;
       }
     }
 
@@ -185,10 +195,10 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
     if (
       editData.amount === undefined ||
       editData.amount === null ||
-      editData.amount <= 0 ||
-      isNaN(editData.amount)
+      Number.isNaN(editData.amount) || // Allow zero amount, but not negative
+      editData.amount < 0
     ) {
-      alert("El importe debe ser un número positivo.");
+      alert("El importe debe ser un número válido no negativo.");
       setIsSaving(false);
       return;
     }
@@ -202,8 +212,10 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
 
     try {
       await onSave(transaction.id, finalData, editFile);
-    } catch (error) {
-      console.error("Error durante onSave:", error);
+    } catch (error: unknown) {
+      console.error("Error saving transaction:", error instanceof Error ? error.message : error);
+      // Consider showing user feedback here instead of just console logging
+      alert(`Error al guardar la transacción: ${error instanceof Error ? error.message : "Error desconocido"}`);
     } finally {
       setIsSaving(false);
     }
@@ -223,19 +235,22 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
   const inputCellStyles = { ...cellStyles, padding: "4px 6px" };
 
   if (isEditing) {
-    const yearsOptions = Array.from({ length: 5 }, (_, i) =>
+    const yearsOptions: string[] = Array.from({ length: 5 }, (_, i) =>
       (new Date().getFullYear() - i).toString(),
     );
-    const monthsOptions = Array.from({ length: 12 }, (_, i) =>
+    const monthsOptions: string[] = Array.from({ length: 12 }, (_, i) =>
       (i + 1).toString().padStart(2, "0"),
     );
-    const daysOptions = Array.from({ length: 31 }, (_, i) =>
+    const daysOptions: string[] = Array.from({ length: 31 }, (_, i) =>
       (i + 1).toString().padStart(2, "0"),
     );
+    const approxCheckboxId = `approx-checkbox-${transaction.id}`;
+    const approxLabelId = `approx-label-${transaction.id}`;
 
     return (
       <TableRow sx={{ "& > td": inputCellStyles }}>
         <TableCell>
+          {/* Date Selection */}
           <Box display="flex" gap={0.5}>
             <Select<string>
               name="_year"
@@ -245,6 +260,7 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
               size="small"
               displayEmpty
               variant="outlined"
+              aria-label="Año"
             >
               <MenuItem value="" disabled>
                 Año
@@ -263,6 +279,7 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
               size="small"
               displayEmpty
               variant="outlined"
+              aria-label="Mes"
             >
               <MenuItem value="" disabled>
                 Mes
@@ -277,11 +294,12 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
               name="_day"
               value={editData._day || ""}
               onChange={(e) => handleSelectChange(e, "_day")}
-              disabled={editData.isDateApproximate}
+              disabled={!!editData.isDateApproximate}
               sx={{ ...editInputStyles, minWidth: 60 }}
               size="small"
               displayEmpty
               variant="outlined"
+              aria-label="Día"
             >
               <MenuItem value="" disabled>
                 Día
@@ -293,8 +311,10 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
               ))}
             </Select>
           </Box>
+          {/* Approximate Date Checkbox */}
           <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
             <Checkbox
+              id={approxCheckboxId}
               name="isDateApproximate"
               checked={!!editData.isDateApproximate}
               onChange={handleCheckboxChange}
@@ -304,13 +324,22 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
                 color: "grey.500",
                 "&.Mui-checked": { color: "#4ade80" },
               }}
+              aria-labelledby={approxLabelId}
             />
-            <Typography variant="caption" sx={{ color: "grey.400" }}>
+            <Typography
+              id={approxLabelId}
+              component="label" // Use label component for better semantics
+              htmlFor={approxCheckboxId} // Associate label with checkbox
+              variant="caption"
+              sx={{ color: "grey.400", cursor: 'pointer' }} // Add pointer cursor
+            >
               Aprox.
             </Typography>
           </Box>
         </TableCell>
+        {/* Receipt Number (Readonly) */}
         <TableCell>{transaction.receiptNumber || "-"}</TableCell>
+        {/* Description */}
         <TableCell>
           <TextField
             name="description"
@@ -320,8 +349,10 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
             size="small"
             fullWidth
             sx={editInputStyles}
+            aria-label="Descripción"
           />
         </TableCell>
+        {/* Amount */}
         <TableCell>
           <TextField
             name="amount"
@@ -332,16 +363,18 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
             size="small"
             fullWidth
             sx={editInputStyles}
-            InputProps={{ inputProps: { min: 0 } }}
+            slotProps={{ input: { inputProps: { min: 0 } }}}
+            aria-label="Importe"
           />
         </TableCell>
+        {/* File Upload */}
         <TableCell>
           <Input
             type="file"
             onChange={handleFileChange}
             sx={{ display: "none" }}
             id={`edit-file-${transaction.id}`}
-            inputProps={{ accept: "image/*" }}
+            inputProps={{ accept: "image/*,application/pdf" }} // Allow PDF too
           />
           <label htmlFor={`edit-file-${transaction.id}`}>
             <Button
@@ -360,6 +393,7 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
                   bgcolor: "rgba(255, 255, 255, 0.05)",
                 },
               }}
+              aria-label="Cambiar archivo de comprobante"
             >
               Cambiar
             </Button>
@@ -371,11 +405,16 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
               mt: 0.5,
               color: "grey.500",
               fontSize: "0.7rem",
+              overflow: "hidden", // Prevent long names from breaking layout
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              maxWidth: '120px', // Adjust as needed
             }}
+            title={editFileName} // Show full name on hover
           >
             {editFileName}
           </Typography>
-          {transaction.receiptUrl && transaction.receiptUrl !== "#" && (
+          {transaction.receiptUrl != null && transaction.receiptUrl !== "#" && (
             <MuiLink
               href={transaction.receiptUrl}
               target="_blank"
@@ -391,11 +430,13 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
             </MuiLink>
           )}
         </TableCell>
+        {/* Actions */}
         <TableCell align="right">
           <IconButton
             onClick={handleInternalSave}
             size="small"
             disabled={isSaving}
+            aria-label="Guardar cambios"
           >
             {isSaving ? (
               <CircularProgress size={20} color="inherit" />
@@ -403,13 +444,19 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
               <SaveIcon sx={{ color: "#4ade80" }} />
             )}
           </IconButton>
-          <IconButton onClick={onCancel} size="small" disabled={isSaving}>
+          <IconButton
+            onClick={onCancel}
+            size="small"
+            disabled={isSaving}
+            aria-label="Cancelar edición"
+          >
             <CancelIcon sx={{ color: "grey.500" }} />
           </IconButton>
         </TableCell>
       </TableRow>
     );
   } else {
+    // Display Row (Not Editing)
     const hasValidUrl =
       transaction.receiptUrl && transaction.receiptUrl !== "#";
     const amountColor = transaction.type === "ingreso" ? "#4ade80" : "#f472b6";
@@ -445,10 +492,18 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
           )}
         </TableCell>
         <TableCell align="right">
-          <IconButton onClick={() => onEdit(transaction.id)} size="small">
+          <IconButton
+            onClick={() => onEdit(transaction.id)}
+            size="small"
+            aria-label={`Editar transacción ${transaction.description}`}
+          >
             <EditIcon sx={{ color: "grey.500", fontSize: "1.1rem" }} />
           </IconButton>
-          <IconButton onClick={() => onDelete(transaction)} size="small">
+          <IconButton
+            onClick={() => onDelete(transaction)}
+            size="small"
+            aria-label={`Eliminar transacción ${transaction.description}`}
+          >
             <DeleteIcon sx={{ color: "#f472b6", fontSize: "1.1rem" }} />
           </IconButton>
         </TableCell>

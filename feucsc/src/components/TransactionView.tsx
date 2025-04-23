@@ -56,6 +56,7 @@ interface TransactionViewProps {
   monthFilter: string;
   orderBy: "fecha" | "nBoleta";
   sortOrder: "asc" | "desc";
+  searchQuery: string;
   onMainTabChange: (event: React.SyntheticEvent, newValue: number) => void;
   onMonthFilterChange: (month: string) => void;
   onSortRequest: (property: "fecha" | "nBoleta") => void;
@@ -76,6 +77,7 @@ function TransactionView({
   monthFilter,
   orderBy,
   sortOrder,
+  searchQuery,
   onMainTabChange,
   onMonthFilterChange,
   onSortRequest,
@@ -86,8 +88,11 @@ function TransactionView({
   const filteredTransactions = useMemo(
     () =>
       transactions.filter((tx) => {
+        // Filter by tab (ingresos/egresos)
         if (mainTab === 0 && tx.type !== "ingreso") return false;
         if (mainTab === 1 && tx.type !== "egreso") return false;
+
+        // Filter by month
         if (mainTab !== 2 && monthFilter !== "Todos") {
           const monthNames = [
             "Ene",
@@ -118,9 +123,21 @@ function TransactionView({
             }
           }
         }
+
+        // Filter by search query
+        if (searchQuery.trim() !== "") {
+          const query = searchQuery.toLowerCase().trim();
+          const descriptionMatches = tx.description.toLowerCase().includes(query);
+          const receiptNumberMatches = tx.receiptNumber?.toLowerCase().includes(query) || false;
+
+          if (!descriptionMatches && !receiptNumberMatches) {
+            return false;
+          }
+        }
+
         return true;
       }),
-    [transactions, mainTab, monthFilter],
+    [transactions, mainTab, monthFilter, searchQuery],
   );
 
   const sortedTransactions = useMemo(
@@ -155,9 +172,12 @@ function TransactionView({
   const comprobantesData = useMemo(() => {
     return transactions
       .filter((tx) => {
+        // Filter by receipt URL and number
         if (!tx.receiptUrl || tx.receiptUrl === "#" || !tx.receiptNumber) {
           return false;
         }
+
+        // Filter by month
         if (monthFilter !== "Todos") {
           const monthNames = [
             "Ene",
@@ -188,10 +208,22 @@ function TransactionView({
             }
           }
         }
+
+        // Filter by search query
+        if (searchQuery.trim() !== "") {
+          const query = searchQuery.toLowerCase().trim();
+          const descriptionMatches = tx.description.toLowerCase().includes(query);
+          const receiptNumberMatches = tx.receiptNumber?.toLowerCase().includes(query) || false;
+
+          if (!descriptionMatches && !receiptNumberMatches) {
+            return false;
+          }
+        }
+
         return true;
       })
       .sort((a, b) => b.date.toMillis() - a.date.toMillis());
-  }, [transactions, monthFilter]);
+  }, [transactions, monthFilter, searchQuery]);
 
   const paginatedComprobantes = comprobantesData.slice(
     page * rowsPerPage,
@@ -624,7 +656,7 @@ function TransactionView({
                               variant="contained"
                               size="small"
                               onClick={() =>
-                                setLightboxImageUrl(row.receiptUrl!)
+                                setLightboxImageUrl(row.receiptUrl || null)
                               }
                               startIcon={<ImageOutlinedIcon fontSize="small" />}
                               sx={{

@@ -1,5 +1,7 @@
+
 import "./App.css";
 import Card from "@mui/material/Card";
+import { Button } from "@mui/material";
 import CardContent from "@mui/material/CardContent";
 import {
   useMotionValue,
@@ -7,7 +9,7 @@ import {
   useTransform,
   AnimatePresence,
   useScroll,
-  useMotionValueEvent,
+
   LazyMotion,
   domAnimation,
   m,
@@ -21,6 +23,8 @@ import {
   useCallback,
   lazy,
   Suspense,
+  SyntheticEvent,
+  ChangeEvent,
 } from "react";
 import ImageLightbox from "./components/ImageLightbox";
 
@@ -33,10 +37,12 @@ import {
   useLocation,
 } from "react-router-dom";
 import AdminPanel from "./pages/AdminPanel";
+import About from "./pages/About";
 
 import { getDb, getAuthInstance } from "./lib/firebase";
 import { type Timestamp } from "firebase/firestore";
 import { User } from "firebase/auth";
+
 
 import {
   TextField,
@@ -80,6 +86,7 @@ function AppContent() {
   const [monthFilter, setMonthFilter] = useState("Todos");
   const [orderBy, setOrderBy] = useState<"fecha" | "nBoleta">("fecha");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [targetReceiptNumber, setTargetReceiptNumber] = useState<string | null>(
     null,
   );
@@ -96,7 +103,7 @@ function AppContent() {
         const firestoreDb = await getDb();
         const { collection, getDocs, query, orderBy } = await import(
           "firebase/firestore"
-        );
+          );
         const transactionsQuery = query(
           collection(firestoreDb, "transactions"),
           orderBy("date", "desc"),
@@ -116,7 +123,15 @@ function AppContent() {
         setLoading(false);
       }
     };
-    fetchTransactions();
+
+    // Use an IIFE to properly handle the Promise
+    (async () => {
+      try {
+        await fetchTransactions();
+      } catch (error) {
+        console.error("Failed to fetch transactions:", error);
+      }
+    })();
   }, []);
 
   const [totalIngresos, totalEgresos] = useMemo(() => {
@@ -155,7 +170,7 @@ function AppContent() {
         incomeControls.stop();
       };
     }
-  }, [totalIngresos, loading]);
+  }, [totalIngresos, loading, incomeMotionValue]); // Added incomeMotionValue dependency
 
   useEffect(() => {
     const currentExpense = expenseMotionValue.get();
@@ -168,7 +183,7 @@ function AppContent() {
         expenseControls.stop();
       };
     }
-  }, [totalEgresos, loading]);
+  }, [totalEgresos, loading, expenseMotionValue]); // Added expenseMotionValue dependency
 
   const clearHighlight = useCallback(() => {
     if (highlightClearTimerRef.current) {
@@ -176,10 +191,10 @@ function AppContent() {
       highlightClearTimerRef.current = null;
     }
     setTargetReceiptNumber(null);
-  }, [highlightClearTimerRef, setTargetReceiptNumber]);
+  }, []); // Removed unnecessary dependencies
 
   const handleMainTabChange = useCallback(
-    (_event: React.SyntheticEvent, newValue: number) => {
+    (_event: SyntheticEvent, newValue: number) => {
       setMainTab(newValue);
       setPage(0);
       clearHighlight();
@@ -216,7 +231,7 @@ function AppContent() {
   );
 
   const handleChangeRowsPerPage = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (event: ChangeEvent<HTMLInputElement>) => {
       setRowsPerPage(parseInt(event.target.value, 10));
       setPage(0);
       clearHighlight();
@@ -238,8 +253,7 @@ function AppContent() {
       const foundIndex = comprobantesForSearch.findIndex(
         (tx) => tx.receiptNumber === receiptNumber,
       );
-      if (foundIndex !== -1) {
-      } else {
+      if (foundIndex === -1) {
         console.warn(
           `handleVerComprobante: No se encontró ${receiptNumber} en comprobantesData`,
         );
@@ -247,7 +261,7 @@ function AppContent() {
       }
 
       setTargetReceiptNumber(receiptNumber);
-      setMainTab(2);
+      setMainTab(2); // Navigate to the tab containing the receipts/comprobantes
       const targetPageCalc = Math.floor(foundIndex / rowsPerPage);
       setPage(targetPageCalc);
       console.log(`handleVerComprobante: Setting page to ${targetPageCalc}`);
@@ -260,40 +274,29 @@ function AppContent() {
     [
       transactions,
       clearHighlight,
-      highlightClearTimerRef,
-      setTargetReceiptNumber,
-      mainTab,
-      page,
       rowsPerPage,
-    ],
+    ], // Simplified dependencies
   );
 
   useEffect(() => {
-    if (!targetReceiptNumber) return;
+    if (!targetReceiptNumber || mainTab !== 2) return; // Only scroll if the target is set and we are on the correct tab
 
     const elementId = `comprobante-${targetReceiptNumber}`;
-    const targetElement = document.getElementById(elementId);
 
-    if (targetElement) {
-      const scrollTimerId = setTimeout(() => {
+    // We need to wait a tick for the potential page change and rendering to occur
+    const scrollTimerId = setTimeout(() => {
+      const targetElement = document.getElementById(elementId);
+      if (targetElement) {
         targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 100);
-      return () => clearTimeout(scrollTimerId);
-    } else {
-      console.warn(
-        `Scroll Effect: Element ${elementId} existe en datos pero no en DOM?`,
-      );
-    }
-  }, [
-    targetReceiptNumber,
-    mainTab,
-    page,
-    rowsPerPage,
-    transactions,
-    monthFilter,
-    orderBy,
-    sortOrder,
-  ]);
+      } else {
+        console.warn(
+          `Scroll Effect: Element ${elementId} not found in DOM after potential page change.`,
+        );
+      }
+    }, 100); // Small delay to allow rendering after state updates
+
+    return () => clearTimeout(scrollTimerId);
+  }, [targetReceiptNumber, page, rowsPerPage, mainTab]); // Dependencies related to when the scroll should potentially happen
 
   return (
     <div className="mx-auto flex w-full max-w-[1580px] flex-col gap-6 px-4 pt-12 sm:px-6 lg:px-8">
@@ -353,12 +356,16 @@ function AppContent() {
                 variant="outlined"
                 fullWidth
                 size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: "grey.500" }} />
-                    </InputAdornment>
-                  ),
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: "grey.500" }} />
+                      </InputAdornment>
+                    ),
+                  }
                 }}
                 sx={{
                   backgroundColor: "#2a2a2a",
@@ -410,6 +417,7 @@ function AppContent() {
                 monthFilter={monthFilter}
                 orderBy={orderBy}
                 sortOrder={sortOrder}
+                searchQuery={searchQuery}
                 onMainTabChange={handleMainTabChange}
                 onMonthFilterChange={handleMonthFilterChange}
                 onSortRequest={handleSortRequest}
@@ -457,21 +465,32 @@ interface LayoutProps {
   handleLogout: () => Promise<void>;
 }
 
+// Updated Layout Component
 function Layout({ user, isAdmin, handleLogin, handleLogout }: LayoutProps) {
   const location = useLocation();
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
+  const previousScroll = useRef(0); // Use ref to store previous scroll value
 
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    const previous = scrollY.getPrevious() ?? 0;
-    const diff = latest - previous;
+  // Replace useMotionValueEvent with useEffect and on("change")
+  useEffect(() => {
+    const unsubscribe = scrollY.on("change", (latest) => {
+      const previous = previousScroll.current; // Get previous value from ref
+      const diff = latest - previous;
 
-    if (latest > 50 && diff > 5) {
-      setHidden(true);
-    } else if (diff < -5 || latest <= 50) {
-      setHidden(false);
-    }
-  });
+      if (latest > 50 && diff > 5) {
+        setHidden(true);
+      } else if (diff < -5 || latest <= 50) {
+        setHidden(false);
+      }
+      previousScroll.current = latest; // Update ref with the latest value
+    });
+
+    // Cleanup function to unsubscribe the listener
+    return () => {
+      unsubscribe();
+    };
+  }, [scrollY]); // Dependency array includes scrollY
 
   const headerVariants = {
     visible: { y: 0, opacity: 1 },
@@ -496,7 +515,7 @@ function Layout({ user, isAdmin, handleLogin, handleLogout }: LayoutProps) {
             />
           </div>
           <div>
-            {location.pathname === "/admin" && (
+            {(location.pathname === "/admin" || location.pathname === "/about") && (
               <IconButton
                 component={Link}
                 to="/"
@@ -510,6 +529,18 @@ function Layout({ user, isAdmin, handleLogin, handleLogout }: LayoutProps) {
                 <HomeOutlinedIcon />
               </IconButton>
             )}
+            <Button
+              component={Link}
+              to="/about"
+              sx={{
+                color: "grey.500",
+                mr: 1,
+                "&:hover": { bgcolor: "rgba(255, 255, 255, 0.08)" },
+                textTransform: "none",
+              }}
+            >
+              Acerca de
+            </Button>
             {user && isAdmin && (
               <IconButton
                 component={Link}
@@ -540,6 +571,7 @@ function Layout({ user, isAdmin, handleLogin, handleLogout }: LayoutProps) {
         </div>
       </m.header>
 
+      {/* Adjust padding-top based on header height */}
       <main className="flex-grow pt-[92px]">
         <AppRoutes isAdmin={isAdmin} />
       </main>
@@ -608,6 +640,7 @@ function Layout({ user, isAdmin, handleLogin, handleLogout }: LayoutProps) {
   );
 }
 
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -617,41 +650,46 @@ function App() {
     let unsubscribe: (() => void) | undefined;
 
     const setupAuthListener = async () => {
+      setAuthLoading(true); // Start loading
       try {
         const authInstance = await getAuthInstance();
         const { onAuthStateChanged } = await import("firebase/auth");
 
         unsubscribe = onAuthStateChanged(authInstance, async (currentUser) => {
           setUser(currentUser);
-          if (currentUser) {
+          if (currentUser && currentUser.email) { // Check if email exists
             const { doc, getDoc } = await import("firebase/firestore");
             const firestoreDb = await getDb();
             try {
               const adminRef = doc(
                 firestoreDb,
                 "administrators",
-                currentUser.email!,
+                currentUser.email, // Use non-null asserted email
               );
               const adminSnap = await getDoc(adminRef);
               setIsAdmin(adminSnap.exists());
             } catch (err) {
               console.error("Error verificando admin:", err);
-              setIsAdmin(false);
+              setIsAdmin(false); // Ensure isAdmin is false on error
             }
           } else {
-            setIsAdmin(false);
+            setIsAdmin(false); // Not logged in or no email, not admin
           }
-          setAuthLoading(false);
+          setAuthLoading(false); // Finish loading after processing auth state
         });
       } catch (error) {
         console.error("Error setting up auth listener:", error);
+        setUser(null); // Reset user/admin state on setup error
         setIsAdmin(false);
-        setAuthLoading(false);
+        setAuthLoading(false); // Finish loading even if setup fails
       }
     };
 
-    setupAuthListener();
+    setupAuthListener().catch(error => {
+      console.error("Failed to setup auth listener:", error);
+    });
 
+    // Cleanup function
     return () => {
       if (unsubscribe) {
         unsubscribe();
@@ -664,11 +702,13 @@ function App() {
       const authInstance = await getAuthInstance();
       const { GoogleAuthProvider, signInWithPopup } = await import(
         "firebase/auth"
-      );
+        );
       const provider = new GoogleAuthProvider();
       await signInWithPopup(authInstance, provider);
+      // Auth state change will be handled by the listener in useEffect
     } catch (error) {
       console.error("Error durante el login:", error);
+      // Optionally show an error message to the user
     }
   };
 
@@ -677,8 +717,10 @@ function App() {
       const authInstance = await getAuthInstance();
       const { signOut } = await import("firebase/auth");
       await signOut(authInstance);
+      // Auth state change (to null) will be handled by the listener
     } catch (error) {
       console.error("Error durante el logout:", error);
+      // Optionally show an error message to the user
     }
   };
 
@@ -720,6 +762,7 @@ function AppRoutes({ isAdmin }: { isAdmin: boolean }) {
         path="/admin"
         element={isAdmin ? <AdminPanel /> : <Navigate to="/" replace />}
       />
+      <Route path="/about" element={<About />} />
     </Routes>
   );
 }

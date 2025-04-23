@@ -10,7 +10,7 @@ interface ImageLightboxProps {
 }
 
 const ImageLightbox: React.FC<ImageLightboxProps> = ({ imageUrl, onClose }) => {
-  const [loading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -23,6 +23,11 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({ imageUrl, onClose }) => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
+
+  // Reset loading state when imageUrl changes
+  useEffect(() => {
+    setLoading(true);
+  }, [imageUrl]);
 
   return (
     <motion.div
@@ -111,6 +116,7 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({ imageUrl, onClose }) => {
             key={imageUrl}
             src={imageUrl}
             alt="Comprobante"
+            onLoad={() => setLoading(false)}
             style={{
               display: loading ? "none" : "block",
               maxWidth: "100%",
