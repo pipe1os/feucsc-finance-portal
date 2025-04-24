@@ -127,8 +127,11 @@ function TransactionView({
         // Filter by search query
         if (searchQuery.trim() !== "") {
           const query = searchQuery.toLowerCase().trim();
-          const descriptionMatches = tx.description.toLowerCase().includes(query);
-          const receiptNumberMatches = tx.receiptNumber?.toLowerCase().includes(query) || false;
+          const descriptionMatches = tx.description
+            .toLowerCase()
+            .includes(query);
+          const receiptNumberMatches =
+            tx.receiptNumber?.toLowerCase().includes(query) || false;
 
           if (!descriptionMatches && !receiptNumberMatches) {
             return false;
@@ -212,8 +215,11 @@ function TransactionView({
         // Filter by search query
         if (searchQuery.trim() !== "") {
           const query = searchQuery.toLowerCase().trim();
-          const descriptionMatches = tx.description.toLowerCase().includes(query);
-          const receiptNumberMatches = tx.receiptNumber?.toLowerCase().includes(query) || false;
+          const descriptionMatches = tx.description
+            .toLowerCase()
+            .includes(query);
+          const receiptNumberMatches =
+            tx.receiptNumber?.toLowerCase().includes(query) || false;
 
           if (!descriptionMatches && !receiptNumberMatches) {
             return false;
@@ -253,9 +259,11 @@ function TransactionView({
             label="Ingresos"
             sx={{
               color: mainTab === 0 ? "#a855f7" : "grey.500",
-              minHeight: "40px",
+              minHeight: { xs: 40, sm: 48 },
               textTransform: "none",
-              fontSize: "0.875rem",
+              px: { xs: 1, sm: 2 },
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+              minWidth: { xs: 80, sm: 120 },
               padding: "6px 12px",
               mx: 1,
             }}
@@ -269,9 +277,11 @@ function TransactionView({
             label="Egresos"
             sx={{
               color: mainTab === 1 ? "#a855f7" : "grey.500",
-              minHeight: "40px",
+              minHeight: { xs: 40, sm: 48 },
               textTransform: "none",
-              fontSize: "0.875rem",
+              px: { xs: 1, sm: 2 },
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+              minWidth: { xs: 80, sm: 120 },
               padding: "6px 12px",
               mx: 1,
             }}
@@ -284,10 +294,12 @@ function TransactionView({
             iconPosition="start"
             label="Comprobantes"
             sx={{
-              color: mainTab === 2 ? "#a855f7" : "grey.500",
-              minHeight: "40px",
+              color: mainTab === 1 ? "#a855f7" : "grey.500",
+              minHeight: { xs: 40, sm: 48 },
               textTransform: "none",
-              fontSize: "0.875rem",
+              px: { xs: 1, sm: 2 },
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+              minWidth: { xs: 80, sm: 120 },
               padding: "6px 12px",
               mx: 1,
             }}
