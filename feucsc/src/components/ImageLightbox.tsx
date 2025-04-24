@@ -62,31 +62,34 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({ imageUrl, onClose }) => {
           maxWidth: "90vw",
           maxHeight: "90vh",
           cursor: "default",
-          backgroundColor: "#121212",
+          backgroundColor: "transparent",
           padding: "8px",
           borderRadius: "4px",
           boxShadow: "0px 4px 20px rgba(0,0,0,0.5)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <IconButton
-          aria-label="Cerrar lightbox"
-          onClick={onClose}
-          sx={{
-            position: "absolute",
-            top: -15,
-            right: -15,
-            zIndex: 1301,
-            color: "white",
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
-            "&:hover": {
-              backgroundColor: "rgba(0, 0, 0, 0.8)",
-            },
-            padding: "4px",
-          }}
-        >
-          <CloseIcon fontSize="small" />
-        </IconButton>
+        {/* Condición para mostrar el botón solo cuando no está cargando */}
+        {!loading && (
+          <IconButton
+            aria-label="Cerrar lightbox"
+            onClick={onClose}
+            sx={{
+              position: "absolute",
+              top: -15,
+              right: -15,
+              zIndex: 1301,
+              color: "white",
+              backgroundColor: "rgba(0, 0, 0, 0.6)",
+              "&:hover": {
+                backgroundColor: "rgba(0, 0, 0, 0.8)",
+              },
+              padding: "4px",
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        )}
 
         <Box
           sx={{
