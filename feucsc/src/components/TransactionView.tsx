@@ -358,26 +358,80 @@ function TransactionView({
                 sx={(theme) => ({
                   backgroundColor: "#2a2a2a",
                   borderRadius: "4px",
-                  overflowX: "auto",
-                  overflowY: "auto",
-                  [theme.breakpoints.up("md")]: {
-                    overflowX: "hidden",
-                    overflowY: "hidden",
+                  overflow: "hidden",
+                  [theme.breakpoints.down("md")]: {
+                    backgroundColor: "transparent",
                   },
                 })}
               >
-                <Table stickyHeader>
-                  <TableHead>
-                    <TableRow
-                      sx={{
-                        "& .MuiTableCell-root": {
-                          backgroundColor: "#333",
-                          color: "grey.400",
-                          borderBottom: "1px solid #444",
+                <Table
+                  stickyHeader
+                  sx={(theme) => ({
+                    [theme.breakpoints.down("md")]: {
+                      borderCollapse: "collapse",
+                      width: "100%",
+                      display: "block",
+                      thead: {
+                        display: "none",
+                      },
+                      tbody: {
+                        display: "block",
+                      },
+                      "& .MuiTableRow-root": {
+                        display: "block",
+                        marginBottom: "1rem",
+                        border: "1px solid #444",
+                        borderRadius: "4px",
+                        padding: "0.5rem",
+                      },
+                      "& .MuiTableCell-root": {
+                        display: "block",
+                        textAlign: "right !important",
+                        paddingLeft: "50% !important",
+                        position: "relative",
+                        borderBottom: "none",
+                        "&::before": {
+                          content: "attr(data-label)",
+                          position: "absolute",
+                          left: "0.5rem",
+                          width: "calc(50% - 1rem)",
+                          paddingRight: "10px",
+                          whiteSpace: "nowrap",
+                          textAlign: "left",
                           fontWeight: "bold",
+                          color: "grey.400",
                         },
-                      }}
-                    >
+                      },
+                      "& td[data-label='IMPORTE']": {
+                        fontWeight: "bold",
+                      },
+                      "& td[data-label='COMPROBANTE']": {
+                        textAlign: "center !important",
+                        paddingLeft: "0 !important",
+                        "&::before": {
+                          display: "none",
+                        },
+                        "& .MuiButton-root": {
+                          width: "100%",
+                        },
+                      },
+                    },
+                  })}
+                >
+                  <TableHead
+                    sx={(theme) => ({
+                      [theme.breakpoints.down("md")]: {
+                        display: "none",
+                      },
+                      "& .MuiTableCell-root": {
+                        backgroundColor: "#333",
+                        color: "grey.400",
+                        borderBottom: "1px solid #444",
+                        fontWeight: "bold",
+                      },
+                    })}
+                  >
+                    <TableRow>
                       <TableCell>
                         <TableSortLabel
                           active={orderBy === "fecha"}
@@ -472,9 +526,13 @@ function TransactionView({
                               damping: 20,
                               duration: 0.2,
                             }}
-                            sx={() => {
+                            sx={(theme) => {
                               return {
                                 position: "relative",
+                                transition: "background-color 0.2s ease-in-out",
+                                backgroundColor: isHighlighted
+                                  ? "rgba(168, 85, 247, 0.15)"
+                                  : "transparent",
                                 "&:last-child td, &:last-child th": {
                                   border: 0,
                                 },
@@ -482,23 +540,33 @@ function TransactionView({
                                   borderBottom: "1px solid #444",
                                   color: "white",
                                 },
-                                backgroundColor: isHighlighted
-                                  ? "rgba(168, 85, 247, 0.15)"
-                                  : "transparent",
-                                transition: "background-color 0.2s ease-in-out",
+                                [theme.breakpoints.down("md")]: {
+                                  backgroundColor: isHighlighted
+                                    ? "rgba(168, 85, 247, 0.15)"
+                                    : "#2a2a2a",
+                                },
                               };
                             }}
                           >
-                            <TableCell component="th" scope="row">
+                            <TableCell
+                              component="th"
+                              scope="row"
+                              data-label="FECHA"
+                            >
                               {formatTransactionDate(
                                 row.date,
                                 row.isDateApproximate,
                               )}
                             </TableCell>
-                            <TableCell>{row.receiptNumber || "-"}</TableCell>
-                            <TableCell>{row.description}</TableCell>
+                            <TableCell data-label="N° BOLETA/COMP.">
+                              {row.receiptNumber || "-"}
+                            </TableCell>
+                            <TableCell data-label="DESCRIPCIÓN">
+                              {row.description}
+                            </TableCell>
                             <TableCell
                               align="right"
+                              data-label="IMPORTE"
                               sx={{
                                 color:
                                   row.type === "ingreso"
@@ -507,7 +575,7 @@ function TransactionView({
                                 fontWeight: "bold",
                               }}
                             >{`$${new Intl.NumberFormat("es-CL").format(row.amount)}`}</TableCell>
-                            <TableCell align="center">
+                            <TableCell align="center" data-label="COMPROBANTE">
                               <Button
                                 variant="contained"
                                 size="small"
@@ -563,26 +631,77 @@ function TransactionView({
                 sx={(theme) => ({
                   backgroundColor: "#2a2a2a",
                   borderRadius: "4px",
-                  overflowX: "auto",
-                  overflowY: "auto",
-                  [theme.breakpoints.up("md")]: {
-                    overflowX: "hidden",
-                    overflowY: "hidden",
+                  overflow: "hidden",
+                  [theme.breakpoints.down("md")]: {
+                    backgroundColor: "transparent",
                   },
                 })}
               >
-                <Table stickyHeader>
-                  <TableHead>
-                    <TableRow
-                      sx={{
-                        "& .MuiTableCell-root": {
-                          backgroundColor: "#333",
-                          color: "grey.400",
-                          borderBottom: "1px solid #444",
+                <Table
+                  stickyHeader
+                  sx={(theme) => ({
+                    [theme.breakpoints.down("md")]: {
+                      borderCollapse: "collapse",
+                      width: "100%",
+                      display: "block",
+                      thead: {
+                        display: "none",
+                      },
+                      tbody: {
+                        display: "block",
+                      },
+                      "& .MuiTableRow-root": {
+                        display: "block",
+                        marginBottom: "1rem",
+                        border: "1px solid #444",
+                        borderRadius: "4px",
+                        padding: "0.5rem",
+                      },
+                      "& .MuiTableCell-root": {
+                        display: "block",
+                        textAlign: "right !important",
+                        paddingLeft: "50% !important",
+                        position: "relative",
+                        borderBottom: "none",
+                        "&::before": {
+                          content: "attr(data-label)",
+                          position: "absolute",
+                          left: "0.5rem",
+                          width: "calc(50% - 1rem)",
+                          paddingRight: "10px",
+                          whiteSpace: "nowrap",
+                          textAlign: "left",
                           fontWeight: "bold",
+                          color: "grey.400",
                         },
-                      }}
-                    >
+                      },
+                      "& td[data-label='Ver Imagen']": {
+                        textAlign: "center !important",
+                        paddingLeft: "0 !important",
+                        "&::before": {
+                          display: "none",
+                        },
+                        "& .MuiButton-root": {
+                          width: "100%",
+                        },
+                      },
+                    },
+                  })}
+                >
+                  <TableHead
+                    sx={(theme) => ({
+                      [theme.breakpoints.down("md")]: {
+                        display: "none",
+                      },
+                      "& .MuiTableCell-root": {
+                        backgroundColor: "#333",
+                        color: "grey.400",
+                        borderBottom: "1px solid #444",
+                        fontWeight: "bold",
+                      },
+                    })}
+                  >
+                    <TableRow>
                       <TableCell>Fecha</TableCell>
                       <TableCell>N° Comp.</TableCell>
                       <TableCell>Descripción</TableCell>
@@ -636,34 +755,41 @@ function TransactionView({
                             damping: 20,
                             duration: 0.2,
                           }}
-                          sx={() => {
+                          sx={(theme) => {
                             const isHighlighted =
                               targetReceiptNumber === row.receiptNumber;
                             return {
                               position: "relative",
-                              "&:last-child td, &:last-child th": {
-                                border: 0,
-                              },
+                              transition: "background-color 0.2s ease-in-out",
+                              backgroundColor: isHighlighted
+                                ? "rgba(168, 85, 247, 0.15)"
+                                : "transparent",
+                              "&:last-child td, &:last-child th": { border: 0 },
                               "& .MuiTableCell-root": {
                                 borderBottom: "1px solid #444",
                                 color: "white",
                               },
-                              backgroundColor: isHighlighted
-                                ? "rgba(168, 85, 247, 0.15)"
-                                : "transparent",
-                              transition: "background-color 0.2s ease-in-out",
+                              [theme.breakpoints.down("md")]: {
+                                backgroundColor: isHighlighted
+                                  ? "rgba(168, 85, 247, 0.15)"
+                                  : "#2a2a2a",
+                              },
                             };
                           }}
                         >
-                          <TableCell>
+                          <TableCell data-label="Fecha">
                             {formatTransactionDate(
                               row.date,
                               row.isDateApproximate,
                             )}
                           </TableCell>
-                          <TableCell>{row.receiptNumber}</TableCell>
-                          <TableCell>{row.description}</TableCell>
-                          <TableCell align="center">
+                          <TableCell data-label="N° Comp.">
+                            {row.receiptNumber}
+                          </TableCell>
+                          <TableCell data-label="Descripción">
+                            {row.description}
+                          </TableCell>
+                          <TableCell align="center" data-label="Ver Imagen">
                             <Button
                               variant="contained"
                               size="small"
@@ -723,8 +849,28 @@ function TransactionView({
               labelDisplayedRows={({ from, to, count }) =>
                 `${from}–${to} de ${count !== -1 ? count : `más de ${to}`}`
               }
-              sx={{
+              sx={(theme) => ({
                 color: "grey.400",
+                borderTop: "1px solid #444",
+                paddingTop: "8px",
+                marginTop: "16px",
+                [theme.breakpoints.down("sm")]: {
+                  "& .MuiTablePagination-toolbar": {
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    gap: "8px",
+                  },
+                  "& .MuiTablePagination-spacer": {
+                    display: "none",
+                  },
+                  "& .MuiTablePagination-selectLabel, & .MuiTablePagination-select, & .MuiTablePagination-displayedRows, & .MuiTablePagination-actions":
+                    {
+                      marginLeft: "0 !important",
+                    },
+                  "& .MuiInputBase-root": {
+                    marginRight: "auto",
+                  },
+                },
                 "& .MuiSelect-icon": { color: "grey.400" },
                 "& .Mui-disabled": {
                   color: "grey.700 !important",
@@ -736,7 +882,7 @@ function TransactionView({
                 },
                 pointerEvents: loading ? "none" : "auto",
                 opacity: loading ? 0.6 : 1,
-              }}
+              })}
             />
           </>
         )}

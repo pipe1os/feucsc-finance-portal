@@ -23,7 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
-
+/feucsc/.firebase
 .cursor
 .mdc
 /.cursor
