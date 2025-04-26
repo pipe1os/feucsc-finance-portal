@@ -1,4 +1,3 @@
-
 import "./App.css";
 import Card from "@mui/material/Card";
 import { Button } from "@mui/material";
@@ -9,7 +8,6 @@ import {
   useTransform,
   AnimatePresence,
   useScroll,
-
   LazyMotion,
   domAnimation,
   m,
@@ -42,7 +40,6 @@ import About from "./pages/About";
 import { getDb, getAuthInstance } from "./lib/firebase";
 import { type Timestamp } from "firebase/firestore";
 import { User } from "firebase/auth";
-
 
 import {
   TextField,
@@ -103,7 +100,7 @@ function AppContent() {
         const firestoreDb = await getDb();
         const { collection, getDocs, query, orderBy } = await import(
           "firebase/firestore"
-          );
+        );
         const transactionsQuery = query(
           collection(firestoreDb, "transactions"),
           orderBy("date", "desc"),
@@ -124,7 +121,6 @@ function AppContent() {
       }
     };
 
-    // Use an IIFE to properly handle the Promise
     (async () => {
       try {
         await fetchTransactions();
@@ -183,7 +179,7 @@ function AppContent() {
         expenseControls.stop();
       };
     }
-  }, [totalEgresos, loading, expenseMotionValue]); // Added expenseMotionValue dependency
+  }, [totalEgresos, loading, expenseMotionValue]);
 
   const clearHighlight = useCallback(() => {
     if (highlightClearTimerRef.current) {
@@ -191,7 +187,7 @@ function AppContent() {
       highlightClearTimerRef.current = null;
     }
     setTargetReceiptNumber(null);
-  }, []); // Removed unnecessary dependencies
+  }, []);
 
   const handleMainTabChange = useCallback(
     (_event: SyntheticEvent, newValue: number) => {
@@ -243,6 +239,11 @@ function AppContent() {
     (receiptNumber: string | null | undefined) => {
       if (!receiptNumber) return;
 
+      setSearchQuery("");
+      setMonthFilter("Todos");
+
+      setPage(0);
+
       clearHighlight();
 
       const comprobantesForSearch = transactions
@@ -260,30 +261,25 @@ function AppContent() {
         return;
       }
 
-      setTargetReceiptNumber(receiptNumber);
-      setMainTab(2); // Navigate to the tab containing the receipts/comprobantes
+      setMainTab(2);
+
       const targetPageCalc = Math.floor(foundIndex / rowsPerPage);
       setPage(targetPageCalc);
       console.log(`handleVerComprobante: Setting page to ${targetPageCalc}`);
 
+      setTargetReceiptNumber(receiptNumber);
       highlightClearTimerRef.current = setTimeout(() => {
         setTargetReceiptNumber(null);
         highlightClearTimerRef.current = null;
       }, 1500);
     },
-    [
-      transactions,
-      clearHighlight,
-      rowsPerPage,
-    ], // Simplified dependencies
+    [transactions, clearHighlight, rowsPerPage],
   );
 
   useEffect(() => {
-    if (!targetReceiptNumber || mainTab !== 2) return; // Only scroll if the target is set and we are on the correct tab
-
+    if (!targetReceiptNumber || mainTab !== 2) return;
     const elementId = `comprobante-${targetReceiptNumber}`;
 
-    // We need to wait a tick for the potential page change and rendering to occur
     const scrollTimerId = setTimeout(() => {
       const targetElement = document.getElementById(elementId);
       if (targetElement) {
@@ -293,11 +289,10 @@ function AppContent() {
           `Scroll Effect: Element ${elementId} not found in DOM after potential page change.`,
         );
       }
-    }, 100); // Small delay to allow rendering after state updates
+    }, 100);
 
     return () => clearTimeout(scrollTimerId);
-  }, [targetReceiptNumber, page, rowsPerPage, mainTab]); // Dependencies related to when the scroll should potentially happen
-
+  }, [targetReceiptNumber, page, rowsPerPage, mainTab]);
   return (
     <div className="mx-auto flex w-full max-w-[1580px] flex-col gap-6 px-4 pt-12 sm:px-6 lg:px-8">
       <div className="mb-6 flex flex-col gap-4 md:flex-row">
@@ -365,7 +360,7 @@ function AppContent() {
                         <SearchIcon sx={{ color: "grey.500" }} />
                       </InputAdornment>
                     ),
-                  }
+                  },
                 }}
                 sx={{
                   backgroundColor: "#2a2a2a",
@@ -470,12 +465,11 @@ function Layout({ user, isAdmin, handleLogin, handleLogout }: LayoutProps) {
   const location = useLocation();
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
-  const previousScroll = useRef(0); // Use ref to store previous scroll value
+  const previousScroll = useRef(0);
 
-  // Replace useMotionValueEvent with useEffect and on("change")
   useEffect(() => {
     const unsubscribe = scrollY.on("change", (latest) => {
-      const previous = previousScroll.current; // Get previous value from ref
+      const previous = previousScroll.current;
       const diff = latest - previous;
 
       if (latest > 50 && diff > 5) {
@@ -483,14 +477,13 @@ function Layout({ user, isAdmin, handleLogin, handleLogout }: LayoutProps) {
       } else if (diff < -5 || latest <= 50) {
         setHidden(false);
       }
-      previousScroll.current = latest; // Update ref with the latest value
+      previousScroll.current = latest;
     });
 
-    // Cleanup function to unsubscribe the listener
     return () => {
       unsubscribe();
     };
-  }, [scrollY]); // Dependency array includes scrollY
+  }, [scrollY]);
 
   const headerVariants = {
     visible: { y: 0, opacity: 1 },
@@ -515,7 +508,8 @@ function Layout({ user, isAdmin, handleLogin, handleLogout }: LayoutProps) {
             />
           </div>
           <div>
-            {(location.pathname === "/admin" || location.pathname === "/about") && (
+            {(location.pathname === "/admin" ||
+              location.pathname === "/about") && (
               <IconButton
                 component={Link}
                 to="/"
@@ -571,7 +565,6 @@ function Layout({ user, isAdmin, handleLogin, handleLogout }: LayoutProps) {
         </div>
       </m.header>
 
-      {/* Adjust padding-top based on header height */}
       <main className="flex-grow pt-[92px]">
         <AppRoutes isAdmin={isAdmin} />
       </main>
@@ -640,7 +633,6 @@ function Layout({ user, isAdmin, handleLogin, handleLogout }: LayoutProps) {
   );
 }
 
-
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -657,7 +649,8 @@ function App() {
 
         unsubscribe = onAuthStateChanged(authInstance, async (currentUser) => {
           setUser(currentUser);
-          if (currentUser && currentUser.email) { // Check if email exists
+          if (currentUser && currentUser.email) {
+            // Check if email exists
             const { doc, getDoc } = await import("firebase/firestore");
             const firestoreDb = await getDb();
             try {
@@ -685,7 +678,7 @@ function App() {
       }
     };
 
-    setupAuthListener().catch(error => {
+    setupAuthListener().catch((error) => {
       console.error("Failed to setup auth listener:", error);
     });
 
@@ -702,13 +695,11 @@ function App() {
       const authInstance = await getAuthInstance();
       const { GoogleAuthProvider, signInWithPopup } = await import(
         "firebase/auth"
-        );
+      );
       const provider = new GoogleAuthProvider();
       await signInWithPopup(authInstance, provider);
-      // Auth state change will be handled by the listener in useEffect
     } catch (error) {
       console.error("Error durante el login:", error);
-      // Optionally show an error message to the user
     }
   };
 
@@ -717,10 +708,8 @@ function App() {
       const authInstance = await getAuthInstance();
       const { signOut } = await import("firebase/auth");
       await signOut(authInstance);
-      // Auth state change (to null) will be handled by the listener
     } catch (error) {
       console.error("Error durante el logout:", error);
-      // Optionally show an error message to the user
     }
   };
 
