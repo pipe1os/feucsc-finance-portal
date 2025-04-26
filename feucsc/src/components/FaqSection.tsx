@@ -19,24 +19,18 @@ const faqData = [
   },
   {
     id: "faq2",
-    title: "¿Por qué algunos datos no tienen boleta o comprobante?",
-    content:
-      "En algunos casos, puede que tengamos problemas con las boletas físicas o digitales que nos impiden añadirlas a la tabla de forma inmediata. Sin embargo, deberíamos tenerlas disponibles en un breve periodo de tiempo.",
-  },
-  {
-    id: "faq3",
     title: "¿Con qué frecuencia actualizan la información?",
     content:
       "La información se actualiza a medida que realizamos gastos o recibimos nuevos ingresos, los cuales ingresamos a la página.",
   },
   {
-    id: "faq4",
+    id: "faq3",
     title: "¿Por qué los ingresos son mayores que los egresos?",
     content:
       "Esto se debe a que los ingresos que mostramos en esta página corresponden únicamente al dinero directo que ingresa a nuestra cuenta bancaria federativa, y no a nuestro presupuesto total. En ocasiones, la universidad realiza pagos directos por bienes o servicios que contratamos, por lo que el dinero no pasa directamente por nuestra cuenta, sino que es una transacción entre la universidad y el proveedor.",
   },
   {
-    id: "faq5",
+    id: "faq4",
     title: "¿Qué debo hacer si encuentro un error o tengo alguna duda?",
     content:
       "Puedes contactarnos a través de nuestro Instagram, cuyo enlace se encuentra al final de esta página, o visitarnos en nuestra sala FEUCSC ubicada en el campus San Andrés.",
