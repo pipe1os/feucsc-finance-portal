@@ -31,3 +31,17 @@ dist-ssr
 
 
 .qodo
+
+/.cursor
+*.txt
+*.log
+*.mdc
+/.cursor/rules
+/.ruru
+/.roo
+.ruru/
+.roo/
+.ruru/*
+.roo/*
+/scripts
+.roomodes

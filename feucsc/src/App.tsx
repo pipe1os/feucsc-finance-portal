@@ -34,8 +34,8 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import AdminPanel from "./pages/AdminPanel";
-import About from "./pages/About";
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const About = lazy(() => import("./pages/About"));
 
 import { getDb, getAuthInstance } from "./lib/firebase";
 import { type Timestamp } from "firebase/firestore";
@@ -166,18 +166,22 @@ function AppContent() {
         incomeControls.stop();
       };
     }
-  }, [totalIngresos, loading, incomeMotionValue]); // Added incomeMotionValue dependency
+  }, [totalIngresos, loading, incomeMotionValue]);
 
   useEffect(() => {
     const currentExpense = expenseMotionValue.get();
+
     if (!loading && totalEgresos > 0 && totalEgresos !== currentExpense) {
       const expenseControls = animate(expenseMotionValue, totalEgresos, {
         duration: 1.5,
         ease: "easeOut",
       });
+
       return () => {
         expenseControls.stop();
       };
+    } else if (!loading && totalEgresos === 0 && currentExpense !== 0) {
+      expenseMotionValue.set(0);
     }
   }, [totalEgresos, loading, expenseMotionValue]);
 
@@ -460,7 +464,6 @@ interface LayoutProps {
   handleLogout: () => Promise<void>;
 }
 
-// Updated Layout Component
 function Layout({ user, isAdmin, handleLogin, handleLogout }: LayoutProps) {
   const location = useLocation();
   const { scrollY } = useScroll();
@@ -642,7 +645,7 @@ function App() {
     let unsubscribe: (() => void) | undefined;
 
     const setupAuthListener = async () => {
-      setAuthLoading(true); // Start loading
+      setAuthLoading(true);
       try {
         const authInstance = await getAuthInstance();
         const { onAuthStateChanged } = await import("firebase/auth");
@@ -650,31 +653,30 @@ function App() {
         unsubscribe = onAuthStateChanged(authInstance, async (currentUser) => {
           setUser(currentUser);
           if (currentUser && currentUser.email) {
-            // Check if email exists
             const { doc, getDoc } = await import("firebase/firestore");
             const firestoreDb = await getDb();
             try {
               const adminRef = doc(
                 firestoreDb,
                 "administrators",
-                currentUser.email, // Use non-null asserted email
+                currentUser.email,
               );
               const adminSnap = await getDoc(adminRef);
               setIsAdmin(adminSnap.exists());
             } catch (err) {
               console.error("Error verificando admin:", err);
-              setIsAdmin(false); // Ensure isAdmin is false on error
+              setIsAdmin(false);
             }
           } else {
-            setIsAdmin(false); // Not logged in or no email, not admin
+            setIsAdmin(false);
           }
-          setAuthLoading(false); // Finish loading after processing auth state
+          setAuthLoading(false);
         });
       } catch (error) {
         console.error("Error setting up auth listener:", error);
-        setUser(null); // Reset user/admin state on setup error
+        setUser(null);
         setIsAdmin(false);
-        setAuthLoading(false); // Finish loading even if setup fails
+        setAuthLoading(false);
       }
     };
 
@@ -682,7 +684,6 @@ function App() {
       console.error("Failed to setup auth listener:", error);
     });
 
-    // Cleanup function
     return () => {
       if (unsubscribe) {
         unsubscribe();
@@ -749,9 +750,32 @@ function AppRoutes({ isAdmin }: { isAdmin: boolean }) {
       <Route path="/" element={<AppContent />} />
       <Route
         path="/admin"
-        element={isAdmin ? <AdminPanel /> : <Navigate to="/" replace />}
+        element={
+          <Suspense
+            fallback={
+              <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+                <CircularProgress />
+              </Box>
+            }
+          >
+            {isAdmin ? <AdminPanel /> : <Navigate to="/" replace />}
+          </Suspense>
+        }
       />
-      <Route path="/about" element={<About />} />
+      <Route
+        path="/about"
+        element={
+          <Suspense
+            fallback={
+              <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+                <CircularProgress />
+              </Box>
+            }
+          >
+            <About />
+          </Suspense>
+        }
+      />
     </Routes>
   );
 }

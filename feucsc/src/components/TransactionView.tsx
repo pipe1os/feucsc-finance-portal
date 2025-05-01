@@ -1,3 +1,4 @@
+import { memo } from "react";
 import React, { useMemo } from "react";
 import {
   Box,
@@ -88,11 +89,9 @@ function TransactionView({
   const filteredTransactions = useMemo(
     () =>
       transactions.filter((tx) => {
-        // Filter by tab (ingresos/egresos)
         if (mainTab === 0 && tx.type !== "ingreso") return false;
         if (mainTab === 1 && tx.type !== "egreso") return false;
 
-        // Filter by month
         if (mainTab !== 2 && monthFilter !== "Todos") {
           const monthNames = [
             "Ene",
@@ -124,7 +123,6 @@ function TransactionView({
           }
         }
 
-        // Filter by search query
         if (searchQuery.trim() !== "") {
           const query = searchQuery.toLowerCase().trim();
           const descriptionMatches = tx.description
@@ -175,12 +173,10 @@ function TransactionView({
   const comprobantesData = useMemo(() => {
     return transactions
       .filter((tx) => {
-        // Filter by receipt URL and number
         if (!tx.receiptUrl || tx.receiptUrl === "#" || !tx.receiptNumber) {
           return false;
         }
 
-        // Filter by month
         if (monthFilter !== "Todos") {
           const monthNames = [
             "Ene",
@@ -212,7 +208,6 @@ function TransactionView({
           }
         }
 
-        // Filter by search query
         if (searchQuery.trim() !== "") {
           const query = searchQuery.toLowerCase().trim();
           const descriptionMatches = tx.description
@@ -891,4 +886,4 @@ function TransactionView({
   );
 }
 
-export default TransactionView;
+export default memo(TransactionView);

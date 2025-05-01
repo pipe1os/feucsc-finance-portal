@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   TableRow,
@@ -75,13 +74,13 @@ const editInputStyles = {
 };
 
 const EditableTableRow: React.FC<EditableTableRowProps> = ({
-                                                             transaction,
-                                                             isEditing,
-                                                             onSave,
-                                                             onCancel,
-                                                             onDelete,
-                                                             onEdit,
-                                                           }) => {
+  transaction,
+  isEditing,
+  onSave,
+  onCancel,
+  onDelete,
+  onEdit,
+}) => {
   const [editData, setEditData] = useState<EditableTransactionData>({});
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editFileName, setEditFileName] = useState<string>(
@@ -129,7 +128,9 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
     setEditData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleCheckboxChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
     const { name, checked } = event.target;
     setEditData((prev) => ({
       ...prev,
@@ -140,7 +141,9 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
     }));
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
     if (event.target.files && event.target.files[0]) {
       setEditFile(event.target.files[0]);
       setEditFileName(event.target.files[0].name);
@@ -161,7 +164,7 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
       try {
         const { Timestamp: FirebaseTimestamp } = await import(
           "firebase/firestore"
-          );
+        );
         const date = new Date(Date.UTC(year, month, day));
         if (
           !Number.isNaN(date.getTime()) &&
@@ -173,9 +176,7 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
         }
       } catch (importError) {
         console.error("Error importing Firebase Timestamp:", importError);
-        alert(
-          "Error al procesar la fecha. Inténtelo de nuevo.",
-        );
+        alert("Error al procesar la fecha. Inténtelo de nuevo.");
         setIsSaving(false);
         return;
       }
@@ -195,7 +196,7 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
     if (
       editData.amount === undefined ||
       editData.amount === null ||
-      Number.isNaN(editData.amount) || // Allow zero amount, but not negative
+      Number.isNaN(editData.amount) ||
       editData.amount < 0
     ) {
       alert("El importe debe ser un número válido no negativo.");
@@ -213,9 +214,13 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
     try {
       await onSave(transaction.id, finalData, editFile);
     } catch (error: unknown) {
-      console.error("Error saving transaction:", error instanceof Error ? error.message : error);
-      // Consider showing user feedback here instead of just console logging
-      alert(`Error al guardar la transacción: ${error instanceof Error ? error.message : "Error desconocido"}`);
+      console.error(
+        "Error saving transaction:",
+        error instanceof Error ? error.message : error,
+      );
+      alert(
+        `Error al guardar la transacción: ${error instanceof Error ? error.message : "Error desconocido"}`,
+      );
     } finally {
       setIsSaving(false);
     }
@@ -250,7 +255,6 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
     return (
       <TableRow sx={{ "& > td": inputCellStyles }}>
         <TableCell>
-          {/* Date Selection */}
           <Box display="flex" gap={0.5}>
             <Select<string>
               name="_year"
@@ -311,7 +315,6 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
               ))}
             </Select>
           </Box>
-          {/* Approximate Date Checkbox */}
           <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
             <Checkbox
               id={approxCheckboxId}
@@ -328,18 +331,18 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
             />
             <Typography
               id={approxLabelId}
-              component="label" // Use label component for better semantics
-              htmlFor={approxCheckboxId} // Associate label with checkbox
+              component="label"
+              htmlFor={approxCheckboxId}
               variant="caption"
-              sx={{ color: "grey.400", cursor: 'pointer' }} // Add pointer cursor
+              sx={{ color: "grey.400", cursor: "pointer" }}
             >
               Aprox.
             </Typography>
           </Box>
         </TableCell>
-        {/* Receipt Number (Readonly) */}
+
         <TableCell>{transaction.receiptNumber || "-"}</TableCell>
-        {/* Description */}
+
         <TableCell>
           <TextField
             name="description"
@@ -363,18 +366,17 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
             size="small"
             fullWidth
             sx={editInputStyles}
-            slotProps={{ input: { inputProps: { min: 0 } }}}
+            slotProps={{ input: { inputProps: { min: 0 } } }}
             aria-label="Importe"
           />
         </TableCell>
-        {/* File Upload */}
         <TableCell>
           <Input
             type="file"
             onChange={handleFileChange}
             sx={{ display: "none" }}
             id={`edit-file-${transaction.id}`}
-            inputProps={{ accept: "image/*,application/pdf" }} // Allow PDF too
+            inputProps={{ accept: "image/*,application/pdf" }}
           />
           <label htmlFor={`edit-file-${transaction.id}`}>
             <Button
@@ -405,12 +407,12 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
               mt: 0.5,
               color: "grey.500",
               fontSize: "0.7rem",
-              overflow: "hidden", // Prevent long names from breaking layout
+              overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
-              maxWidth: '120px', // Adjust as needed
+              maxWidth: "120px",
             }}
-            title={editFileName} // Show full name on hover
+            title={editFileName}
           >
             {editFileName}
           </Typography>
@@ -456,7 +458,6 @@ const EditableTableRow: React.FC<EditableTableRowProps> = ({
       </TableRow>
     );
   } else {
-    // Display Row (Not Editing)
     const hasValidUrl =
       transaction.receiptUrl && transaction.receiptUrl !== "#";
     const amountColor = transaction.type === "ingreso" ? "#4ade80" : "#f472b6";

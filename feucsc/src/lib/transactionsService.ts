@@ -1,17 +1,15 @@
-// Eliminar importaciones estáticas de db y storage
-// import { db, storage } from "./firebase";
-import { type Timestamp } from "firebase/firestore"; // Mantener tipo
-// Importar getters
+import { type Timestamp } from "firebase/firestore";
+
 import { getDb, getStorageInstance } from "./firebase";
 
 interface AddTransactionData {
   type: "ingreso" | "egreso";
-  date: Timestamp; // Already constructed timestamp
+  date: Timestamp;
   description: string;
-  amount: number; // Already parsed number
+  amount: number;
   isApproximate: boolean;
   receiptFile: File | null;
-  addedByEmail: string; // Email of the admin adding the transaction
+  addedByEmail: string;
 }
 
 export const addTransaction = async ({
@@ -23,26 +21,21 @@ export const addTransaction = async ({
   receiptFile,
   addedByEmail,
 }: AddTransactionData): Promise<string> => {
-  // 1. Validate essential data (basic check)
   if (!type || !date || !description || isNaN(amount) || !addedByEmail) {
     throw new Error("Faltan datos esenciales para agregar la transacción.");
   }
 
-  // Obtener db instance al inicio de la lógica principal
   const firestoreDb = await getDb();
   const { doc, runTransaction } = await import("firebase/firestore");
 
-  const counterRef = doc(firestoreDb, "counters", "transactionCounter"); // Usar firestoreDb
+  const counterRef = doc(firestoreDb, "counters", "transactionCounter");
   let newReceiptNumberStr = "";
   let receiptUrl = "";
 
   try {
-    // 2. Run a Firestore transaction to get and update the counter
     await runTransaction(firestoreDb, async (transaction) => {
       const counterDoc = await transaction.get(counterRef);
       if (!counterDoc.exists()) {
-        // If counter doesn't exist, maybe initialize it? Or throw error.
-        // For now, let's assume it must exist and throw an error.
         console.error("Counter document 'transactionCounter' does not exist!");
         throw new Error(
           "El contador de comprobantes no existe. Contacta al administrador.",
@@ -51,9 +44,7 @@ export const addTransaction = async ({
 
       const currentNumber = counterDoc.data()?.currentNumber ?? 0;
       const newNumber = currentNumber + 1;
-      newReceiptNumberStr = `N°${newNumber}`; // Format the receipt number
-
-      // Update the counter in the transaction
+      newReceiptNumberStr = `N°${newNumber}`;
       transaction.update(counterRef, { currentNumber: newNumber });
       console.log(
         `Número de comprobante obtenido y actualizado: ${newReceiptNumberStr}`,
@@ -61,7 +52,6 @@ export const addTransaction = async ({
     });
 
     if (receiptFile) {
-      // Obtener storage instance si hay archivo
       const storage = await getStorageInstance();
       const { ref, uploadBytesResumable, getDownloadURL } = await import(
         "firebase/storage"
@@ -70,7 +60,7 @@ export const addTransaction = async ({
       console.log("Subiendo archivo de comprobante...");
       const fileName = `${newReceiptNumberStr}-${receiptFile.name}`;
       const storagePath = `${fileName}`;
-      const storageRef = ref(storage, storagePath); // Usar storage
+      const storageRef = ref(storage, storagePath);
 
       const uploadTask = uploadBytesResumable(storageRef, receiptFile);
 
@@ -102,7 +92,6 @@ export const addTransaction = async ({
       });
     }
 
-    // addDoc necesita la instancia db, que ya tenemos en firestoreDb
     const { collection, addDoc, serverTimestamp } = await import(
       "firebase/firestore"
     );
@@ -121,7 +110,7 @@ export const addTransaction = async ({
 
     console.log("Añadiendo documento a Firestore:", newTransactionData);
     const docRef = await addDoc(
-      collection(firestoreDb, "transactions"), // Usar firestoreDb
+      collection(firestoreDb, "transactions"),
       newTransactionData,
     );
     console.log("Transacción añadida con ID:", docRef.id);

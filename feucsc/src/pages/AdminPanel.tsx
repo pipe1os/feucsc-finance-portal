@@ -199,7 +199,10 @@ const AdminPanel: React.FC = () => {
     } catch (dateError: unknown) {
       setSnackbar({
         open: true,
-        message: dateError instanceof Error ? dateError.message : "Error al construir la fecha.",
+        message:
+          dateError instanceof Error
+            ? dateError.message
+            : "Error al construir la fecha.",
         severity: "error",
       });
       return;
@@ -244,7 +247,10 @@ const AdminPanel: React.FC = () => {
       console.error("Error en handleSubmit:", error);
       setSnackbar({
         open: true,
-        message: error instanceof Error ? error.message : "Error al agregar el movimiento.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error al agregar el movimiento.",
         severity: "error",
       });
     } finally {
@@ -379,7 +385,7 @@ const AdminPanel: React.FC = () => {
       }
 
       let comparison = 0;
-      if (typeof valA === 'number' && typeof valB === 'number') {
+      if (typeof valA === "number" && typeof valB === "number") {
         if (valA > valB) comparison = 1;
         else if (valA < valB) comparison = -1;
       } else {
@@ -900,10 +906,10 @@ const AdminPanel: React.FC = () => {
                         <InputAdornment position="start">
                           <Typography sx={{ color: "grey.500" }}>$</Typography>
                         </InputAdornment>
-                      )
+                      ),
                     },
                     inputLabel: { shrink: true },
-                    htmlInput: { min: 0, placeholder: "Ej: 50000" }
+                    htmlInput: { min: 0, placeholder: "Ej: 50000" },
                   }}
                   sx={inputStyles}
                   size="small"
